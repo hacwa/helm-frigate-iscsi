@@ -1,0 +1,407 @@
+# Default values for frigate.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# -- upgrade strategy type (e.g. Recreate or RollingUpdate)
+strategyType: Recreate
+
+image:
+  repository: ghcr.io/blakeblackshear/frigate
+  tag: 0.13.0
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+env: {}
+envFromSecrets: []
+
+coral:
+  enabled: false
+  hostPath: /dev/bus/usb
+
+gpu:
+  nvidia:
+    enabled: false
+    runtimeClassName:
+
+
+
+shmSize: 6Gi
+
+
+nameOverride: ""
+
+fullnameOverride: ""
+
+config: |
+ mqtt:
+   host: mqtt.hacwa.internal
+   port: 1883
+   user: mqtt
+   password: mqttmqtt
+   client_id: frigate-k8s
+   topic_prefix: frigate-k8s
+   stats_interval: 5
+ birdseye:
+   enabled: False
+   width: 1280
+   height: 720
+   quality: 8
+   mode: objects
+
+
+ go2rtc:
+   streams:
+     dining-cam-record:
+       - rtspx://10.0.11.10:7441/aPxbfyv3V7jAjWn4
+       - "ffmepg:g4_pro#video=h264"
+     dining-cam-detect:
+       - rtspx://10.0.11.10:7441/4qPIm2eKZsn9mExF
+       - "ffmepg:g4_pro#video=h264"
+     kitchen-cam-record:
+       - rtspx://10.0.11.10:7441/hImeOsGccooDQbz6
+       - "ffmepg:g4_pro#video=h264"
+     kitchen-cam-detect:
+       - rtspx://10.0.11.10:7441/xofaps5qMgsU0glI
+       - "ffmepg:g4_pro#video=h264"
+     doorbell-record:
+       - rtspx://10.0.11.10:7441/UwCOcHzgDo6IIHtG
+       - "ffmepg:g4_pro#video=h264"
+     doorbell-detect:
+       - rtspx://10.0.11.10:7441/HOLpQjviNiA7feRH
+       - "ffmepg:g4_pro#video=h264"
+     living-room-record:
+       - rtspx://10.0.11.10:7441/GU9Xj55D77iCYdCB
+       - "ffmepg:g4_pro#video=h264"
+     living-room-detect:
+       - rtspx://10.0.11.10:7441/W8mkwV4SAKodaWsM
+       - "ffmepg:g4_pro#video=h264"
+ #     ptz-record:
+ #       - ffmpeg:rtsp://shinobi:shinobi@10.0.11.7:554/stream0?username=admin&password=C108E35F1E1F8D69356F3919DC43993A
+ #  #   ptz-detect:
+ #  #     - ffmpeg:rtsp://shinobi:shinobi@10.0.11.7:554/stream1?username=admin&password=C108E35F1E1F8D69356F3919DC43993A
+ #   publish:
+ #     ptz-record:
+ # #      - rtmps://xxx-x.rtmp.t.me/s/xxxxxxxxxx:xxxxxxxxxxxxxxxxxxxxxx
+ #       - rtmp://a.rtmp.youtube.com/live2/65wv-emb8-v765-bq00-539c
+
+
+
+
+
+ cameras:
+   dining-roomz:
+     ffmpeg:
+       input_args:
+         -avoid_negative_ts make_zero
+         -fflags +genpts+discardcorrupt
+         -rtsp_transport tcp
+         -hwaccel auto
+       output_args:
+         record:
+           -f segment
+           -segment_time 10
+           -segment_format mp4
+           -reset_timestamps 1
+           -strftime 1
+           -c copy
+       inputs:
+         - path: rtsp://127.0.0.1:8554/dining-cam-detect
+           input_args: preset-rtsp-restream
+           roles:
+             - detect
+         - path: rtsp://127.0.0.1:8554/dining-cam-record
+           input_args: preset-rtsp-restream
+           roles:
+             - record
+
+   kitchen-cam:
+     ffmpeg:
+       input_args:
+         -avoid_negative_ts make_zero
+         -fflags +genpts+discardcorrupt
+         -rtsp_transport tcp
+         -hwaccel auto
+       output_args:
+         record:
+           -f segment
+           -segment_time 10
+           -segment_format mp4
+           -reset_timestamps 1
+           -strftime 1
+           -c copy
+       inputs:
+         - path: rtsp://127.0.0.1:8554/kitchen-cam-detect
+           input_args: preset-rtsp-restream
+           roles:
+             - detect
+         - path: rtsp://127.0.0.1:8554/kitchen-cam-record
+           input_args: preset-rtsp-restream
+           roles:
+             - record
+
+
+   doorbell:
+     ffmpeg:
+       input_args:
+         -avoid_negative_ts make_zero
+         -fflags +genpts+discardcorrupt
+         -rtsp_transport tcp
+         -hwaccel auto
+       output_args:
+         record:
+           -f segment
+           -segment_time 10
+           -segment_format mp4
+           -reset_timestamps 1
+           -strftime 1
+           -c copy
+       inputs:
+         - path: rtsp://127.0.0.1:8554/doorbell-detect
+           input_args: preset-rtsp-restream
+           roles:
+             - detect
+         - path: rtsp://127.0.0.1:8554/doorbell-record
+           input_args: preset-rtsp-restream
+           roles:
+             - record
+
+   living-room:
+     ffmpeg:
+       input_args:
+         -avoid_negative_ts make_zero
+         -fflags +genpts+discardcorrupt
+         -rtsp_transport tcp
+         -hwaccel auto
+       output_args:
+         record:
+           -f segment
+           -segment_time 10
+           -segment_format mp4
+           -reset_timestamps 1
+           -strftime 1
+           -c copy
+       inputs:
+         - path: rtsp://127.0.0.1:8554i/living-room-detect
+           input_args: preset-rtsp-restream
+           roles:
+             - detect
+         - path: rtsp://127.0.0.1:8554i/living-room-record
+           input_args: preset-rtsp-restream
+           roles:
+             - record
+
+   P1435:
+     ffmpeg:
+       input_args:
+         -avoid_negative_ts make_zero
+         -fflags +genpts+discardcorrupt
+         -rtsp_transport tcp
+         -hwaccel auto
+       output_args:
+         record:
+           -f segment
+           -segment_time 10
+           -segment_format mp4
+           -reset_timestamps 1
+           -strftime 1
+           -c copy
+       inputs:
+         - path: rtsp://p1435:p1435@10.0.11.4/onvif-media/media.amp?profile=profile_1_h264&sessiontimeout=60&streamtype=unicast
+           roles:
+             - record
+         - path: rtsp://frigatedetect:frigatedetect@10.0.11.4/onvif-media/media.amp?profile=profile_2_h264
+           roles:
+             - detect
+     detect:
+       width: 640
+       height: 480
+       fps: 5
+     objects:
+       track:
+       - cat
+       - dog
+
+
+
+   PTZ_Roof:
+     ffmpeg:
+       inputs:
+         - path: rtsp://shinobi:shinobi@10.0.11.7:554/stream1?username=admin&password=C108E35F1E1F8D69356F3919DC43993A
+           roles:
+             - detect
+         - path: rtsp://shinobi:shinobi@10.0.11.7:554/stream0?username=admin&password=C108E35F1E1F8D69356F3919DC43993A
+           roles:
+             - record
+     onvif:
+         host: 10.0.11.7
+         port: 80
+         user: admin
+         password: md3ShcsxRnfz
+         autotracking:
+           enabled: false
+           track:
+             - person
+             - car
+           required_zones:
+             - Rue
+           return_preset: 1
+           timeout: 10
+     detect:
+       width: 720
+       height: 480
+     record: #
+             enabled: true
+               #  days: 2
+               #  mode: all
+             events: 
+                 retain:
+                     mode: active_objects
+                     default: 2
+     snapshots:
+             enabled: True
+             retain:
+                 default: 30
+     zones:
+       Rue:
+         coordinates: 776,120,1791,163,1920,1080,42,1080,59,545,0,480,690,336
+
+     objects:
+         track:
+         - person
+         - cat
+         - dog
+         - car
+
+         # database:
+         #  path: /data/frigate.db
+ record:
+   enabled: True
+   events:
+     pre_capture: 4
+     post_capture: 4
+     objects:
+         - cat
+         - dog
+         - person
+     retain:
+       default: 1
+ snapshots:
+   enabled: True
+   timestamp: False
+   bounding_box: False
+   crop: False
+   retain:
+     default: 1
+     objects:
+         cat: 1
+         dog: 1
+         person: 1
+ rtmp:
+   enabled: false
+
+ detectors:
+   cpu1:
+     type: cpu
+ ui:
+   time_format: 24hour
+   date_style: medium
+ # logger:
+ #   default: info
+ #   logs:
+ #     frigate.ptz.autotrack: debug
+ #     frigate.ptz.onvif: debug
+
+ #telemetry:
+
+# Probes configuration
+probes:
+  liveness:
+    enabled: true
+    initialDelaySeconds: 30
+    failureThreshold: 5
+    timeoutSeconds: 10
+  readiness:
+    enabled: true
+    initialDelaySeconds: 30
+    failureThreshold: 5
+    timeoutSeconds: 10
+  startup:
+    enabled: false
+    failureThreshold: 30
+    periodSeconds: 10
+
+service:
+  type: LoadBalancer
+  port: 80
+  targetPort: 5000
+  annotations: {}
+  labels: {}
+
+  ipFamilyPolicy: SingleStack
+  ipFamilies: []
+
+
+ingress:
+  enabled: false
+
+  annotations: {}
+
+  hosts:
+    - host: chart.example.local
+      paths:
+        - '/'
+
+  tls: []
+
+
+persistence:
+  config:
+    enabled: true
+    size: "2Gi"
+    accessModes:
+      - "ReadWriteOnce"
+    storageClassName: "iscsi"
+    skipuninstall: true
+  media:
+    enabled: true
+    size: "100Gi"
+    accessModes:
+      - "ReadWriteOnce"
+    storageClassName: "iscsi"
+    skipuninstall: true
+  data:
+    enabled: false
+    storageClass: "iscsi"
+    accessMode: ReadWriteOnce
+    size: 5Gi
+    skipuninstall: false
+
+iscsi:
+  targetPortal: "10.0.4.2:3260"
+  iqn: "iqn.2003-01.org.linux-iscsi.pve.x8664:sn.80a390a0db78"
+
+
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  #   gpu.intel.com/i915: 1
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+  #   gpu.intel.com/i915: 1
+
+securityContext: 
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+  # privileged: true
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+podAnnotations: {}
