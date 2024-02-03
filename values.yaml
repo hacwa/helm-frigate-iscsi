@@ -16,7 +16,7 @@ env: {}
 envFromSecrets: []
 
 coral:
-  enabled: false
+  enabled: true
   hostPath: /dev/bus/usb
 
 gpu:
@@ -39,8 +39,8 @@ config: |
    port: 1883
    user: mqtt
    password: mqttmqtt
-   client_id: frigate-k8s
-   topic_prefix: frigate-k8s
+   client_id: frigate
+   topic_prefix: frigate
    stats_interval: 5
  birdseye:
    enabled: False
@@ -301,8 +301,12 @@ config: |
    enabled: false
 
  detectors:
-   cpu1:
-     type: cpu
+   coral1:
+     type: edgetpu
+     device: usb:0
+   coral2:
+     type: edgetpu
+     device: usb:1
  ui:
    time_format: 24hour
    date_style: medium
@@ -401,7 +405,8 @@ securityContext:
   # runAsUser: 1000
   # privileged: true
 
-nodeSelector: {}
+nodeSelector:
+  node-role: k8s-worker-02
 tolerations: []
 affinity: {}
 podAnnotations: {}
